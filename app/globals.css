@@ -1,13 +1,8 @@
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --background: #626262;
+  --foreground: #ffffff;
+  --red: #ff5050;
+  --blue: #639fff;
 }
 
 html,
@@ -30,13 +25,34 @@ body {
   margin: 0;
 }
 
+h1 {
+  color: var(--red);
+}
+
 a {
-  color: inherit;
+  color: var(--blue);
   text-decoration: none;
 }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
+.page {
+  display: flex;
+  justify-content: center;
+  padding: 80px 10px;
+  font-family: var(--font-geist-sans);
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  grid-row-start: 2;
+  text-align: center;
+}
+
+/* Enable hover only on non-touch devices */
+@media (hover: hover) and (pointer: fine) {
+  a:hover {
+    text-decoration: underline;
+    text-underline-offset: 4px;
   }
 }
