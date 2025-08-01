@@ -5,6 +5,7 @@ export class PositionHandler {
     private positionListener: ((positionHandler: PositionHandler) => void) | null = null;
 
     private lastKnownPosition: GeolocationPosition | null;
+    private lastKnownStation: StationName | null = null;
     private closestStation: { name: StationName; distance: number } | null = null;
 
     constructor() {
@@ -25,16 +26,16 @@ export class PositionHandler {
         return PositionHandler.instance;
     }
 
-    public setPositionListener(listener: ((positionHandler: PositionHandler) => void) | null) {
-        this.positionListener = listener;
-    }
-
     public getLastKnownPosition(): GeolocationPosition | null {
         return this.lastKnownPosition;
     }
 
     public getClosestStation(): { name: StationName; distance: number } | null {
         return this.closestStation;
+    }
+
+    public setPositionListener(listener: ((positionHandler: PositionHandler) => void) | null) {
+        this.positionListener = listener;
     }
 
     private updateClosestStation() {
@@ -48,7 +49,6 @@ export class PositionHandler {
         for (const stationName of WEEKDAY_STATIONS) {
             const stationCoords = getStationCoords(stationName);
             const distance = this.distance(userCoords.latitude, userCoords.longitude, stationCoords.latitude, stationCoords.longitude);
-            console.log(`Distance from ${stationName} is ${distance} miles`);
             if (distance < minDistance) {
                 minDistance = distance;
                 closestStation = stationName;
@@ -56,6 +56,19 @@ export class PositionHandler {
         }
         console.log(`Closest station is ${closestStation} at a distance of ${minDistance} miles`);
         this.closestStation = { name: closestStation, distance: minDistance };
+
+        if (minDistance < 0.1) {
+            console.log(`You are at the ${closestStation} station.`);
+            this.lastKnownStation = closestStation;
+        } else if (minDistance < 0.5 && this.lastKnownStation === closestStation) {
+            // At one point, the user was at this station, but now they are further away
+            // So they are likely on a train departing from this station (or just left it, but we'll assume they are on a train)
+            console.log(`You are likely on a train departing from ${closestStation}.`);
+        } else if (minDistance < 0.5 && this.lastKnownStation !== closestStation) {
+            // The user is close to a station, but not at the one they were last known to be at
+            // So they are likely on a train arriving at this station
+            console.log(`You are likely on a train arriving at ${closestStation}.`);
+        }
     }
 
     private updateSuccess(position: GeolocationPosition) {
