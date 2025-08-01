@@ -1,27 +1,20 @@
 "use client";
 
 import { PositionHandler } from "@/lib/PositionHandler";
+import { StationName } from "@/lib/Stations";
 import { useEffect, useState } from "react";
 
 export default function CaltrainEta() {
-  const [cityName, setCityName] = useState<string | null>(null);
+  const [closestStation, setClosestStation] = useState<{ name: StationName; distance: number } | null>(null);
 
   function onPositionUpdate(positionHandler: PositionHandler) {
-    const lastKnownPosition = positionHandler.getLastKnownPosition();
-    if (!lastKnownPosition) {
-      console.warn("No last known position available.");
-      setCityName("Unknown location");
-      return;
-    }
-
     const closestStation = positionHandler.getClosestStation();
     if (!closestStation) {
       console.warn("Couldn't determine closest station.");
-      setCityName("Couldn't determine closest station.");
+      setClosestStation(null);
       return;
     }
-
-    setCityName(`${closestStation.name} (${closestStation.distance.toFixed(2)} miles away)`);
+    setClosestStation({ name: closestStation.name, distance: closestStation.distance });
   }
 
   useEffect(() => {
@@ -33,11 +26,17 @@ export default function CaltrainEta() {
     <div className="page">
       <main className="main">
         <h1>caltrain eta</h1>
-        <p>Train 109</p>
-        {cityName ? <p>Closest Station: {cityName}</p> : <p>Unknown location</p>}
-        <p>Next: California Avenue</p>
-        <p>ETA: 7:19am (3 mins)</p>
-        <a href="http://nishilanand.com">Test link</a>
+
+        {closestStation ?
+          <>
+            <p>Train 109</p>
+            <p>Closest Station: {closestStation.name} ({closestStation.distance.toFixed(2)} miles away)</p>
+            <p>Next: California Avenue</p>
+            <p>ETA: 7:19am (3 mins)</p>
+          </>
+          :
+          <p>Please allow location access</p>
+        }
       </main>
     </div >
   );

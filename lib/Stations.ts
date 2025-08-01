@@ -22,14 +22,14 @@ export enum StationName {
     SUNNYVALE = "Sunnyvale",
     LAWRENCE = "Lawrence",
     SANTA_CLARA = "Santa Clara",
-    // COLLEGE_PARK = "College Park",        // TODO: handle college park edge case (only trains 108, 113, 140, 141 stop here)
+    COLLEGE_PARK = "College Park",        // TODO: handle college park edge case (only trains 108, 113, 140, 141 stop here)
     SAN_JOSE_DIRIDON = "San Jose Diridon",
-    // TAMIEN = "Tamien",                    // TODO: South County Connector
-    // CAPITOL = "Capitol",
-    // BLOSSOM_HILL = "Blossom Hill",
-    // MORGAN_HILL = "Morgan Hill",
-    // SAN_MARTIN = "San Martin",
-    // GILROY = "Gilroy"
+    TAMIEN = "Tamien",                    // TODO: South County Connector
+    CAPITOL = "Capitol",
+    BLOSSOM_HILL = "Blossom Hill",
+    MORGAN_HILL = "Morgan Hill",
+    SAN_MARTIN = "San Martin",
+    GILROY = "Gilroy"
 };
 
 const STATION_COORDS: Record<StationName, { latitude: number; longitude: number }> = {
@@ -56,14 +56,14 @@ const STATION_COORDS: Record<StationName, { latitude: number; longitude: number 
     [StationName.SUNNYVALE]: { latitude: 37.378611, longitude: -122.030833 },
     [StationName.LAWRENCE]: { latitude: 37.370556, longitude: -121.996111 },
     [StationName.SANTA_CLARA]: { latitude: 37.353056, longitude: -121.936389 },
-    // [StationName.COLLEGE_PARK]: { lat: 37.342778, lon: -121.915556 },
+    [StationName.COLLEGE_PARK]: { latitude: 37.342778, longitude: -121.915556 },
     [StationName.SAN_JOSE_DIRIDON]: { latitude: 37.33, longitude: -121.903 },
-    // [StationName.TAMIEN]: { lat: 37.3127, lon: -121.884781 },
-    // [StationName.CAPITOL]: { lat: 37.283889, lon: -121.841667 },
-    // [StationName.BLOSSOM_HILL]: { lat: 37.283889, lon: -121.841667 },
-    // [StationName.MORGAN_HILL]: { lat: 37.129444, lon: -121.650556 },
-    // [StationName.SAN_MARTIN]: { lat: 37.085833, lon: -121.610556 },
-    // [StationName.GILROY]: { lat: 37.004167, lon: -121.566667 }
+    [StationName.TAMIEN]: { latitude: 37.3127, longitude: -121.884781 },
+    [StationName.CAPITOL]: { latitude: 37.283889, longitude: -121.841667 },
+    [StationName.BLOSSOM_HILL]: { latitude: 37.283889, longitude: -121.841667 },
+    [StationName.MORGAN_HILL]: { latitude: 37.129444, longitude: -121.650556 },
+    [StationName.SAN_MARTIN]: { latitude: 37.085833, longitude: -121.610556 },
+    [StationName.GILROY]: { latitude: 37.004167, longitude: -121.566667 }
 };
 
 export const WEEKDAY_STATIONS = Object.freeze([
