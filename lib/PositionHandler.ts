@@ -1,5 +1,6 @@
 import { Heading, Schedule } from "./Schedule";
 import { getStationCoords, StationName, WEEKDAY_STATIONS } from "./Stations";
+import { serverLog } from "./ServerLogger";
 
 export class PositionHandler {
     private static instance: PositionHandler | null = null;
@@ -11,7 +12,7 @@ export class PositionHandler {
     private closestStation: { name: StationName; distance: number } | null = null;
 
     constructor() {
-        console.log("PositionHandler initialized");
+        serverLog("PositionHandler initialized");
 
         this.lastKnownPosition = null;
 
@@ -60,34 +61,34 @@ export class PositionHandler {
                 closestStation = stationName;
             }
         }
-        console.log(`Closest station is ${closestStation} at a distance of ${minDistance} miles`);
+        serverLog(`Closest station is ${closestStation} at a distance of ${minDistance} miles`);
         this.closestStation = { name: closestStation, distance: minDistance };
 
         if (minDistance < 0.1) {
-            console.log(`You are at the ${closestStation} station.`);
+            serverLog(`You are at the ${closestStation} station.`);
             this.lastKnownStation = closestStation;
         } else if (minDistance < 0.5 && this.lastKnownStation === closestStation) {
             // At one point, the user was at this station, but now they are further away
             // So they are likely on a train departing from this station (or just left it, but we'll assume they are on a train)
             const heading = this.getHeading(getStationCoords(this.lastKnownStation).latitude, userCoords.latitude);
-            console.log(`You are likely on a train departing from ${closestStation} going ${heading}.`);
+            serverLog(`You are likely on a train departing from ${closestStation} going ${heading}.`);
             const train = "Train 999";
             const train2 = Schedule.getTrainByDepartTimeAndHeading(this.lastKnownPosition.timestamp.toString(), closestStation, heading);
             if (train && this.trainListener) {
                 this.trainListener(train.toString());
             }
             if (train2) {
-                console.log(`Train found: ${train2.getNumber()} heading ${train2.getHeading()}`);
+                serverLog(`Train found: ${train2.getNumber()} heading ${train2.getHeading()}`);
             }
         } else if (minDistance < 0.5 && this.lastKnownStation !== closestStation) {
             // The user is close to a station, but not at the one they were last known to be at
             // So they are likely on a train arriving at this station
-            console.log(`You are likely on a train arriving at ${closestStation}.`);
+            serverLog(`You are likely on a train arriving at ${closestStation}.`);
         }
     }
 
     private updateSuccess(position: GeolocationPosition) {
-        console.log(`Position updated: ${position.coords.latitude}, ${position.coords.longitude} at ${new Date(position.timestamp).toLocaleTimeString()} (${position.timestamp})`);
+        serverLog(`Position updated: ${position.coords.latitude}, ${position.coords.longitude} at ${new Date(position.timestamp).toLocaleTimeString()} (${position.timestamp})`);
         this.lastKnownPosition = position;
         this.updateClosestStation();
         if (this.positionListener) {
