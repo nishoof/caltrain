@@ -2,6 +2,11 @@ import { StationName } from "./Stations";
 
 const NO_TIME = null;
 
+export enum Heading {
+    NORTH = 1,
+    SOUTH = -1
+}
+
 class Train {
     private static readonly NUM_STATIONS = 29;
     private static readonly STATION_NAME_TO_INDEX: { [K in StationName]: number } = {
@@ -52,9 +57,21 @@ class Train {
         return this.number;
     }
 
+    public getHeading(): Heading {
+        if (this.number % 2 === 0) {
+            return Heading.SOUTH;
+        } else {
+            return Heading.NORTH;
+        }
+    }
+
     public getExpectedArrivalTime(stationName: StationName): string | typeof NO_TIME {
         const index = Train.STATION_NAME_TO_INDEX[stationName];
         return this.expectedTimes[index];
+    }
+
+    public toString(): string {
+        return `Train ${this.number}`;
     }
 }
 
@@ -188,5 +205,9 @@ export class Schedule {
 
         const time = train.getExpectedArrivalTime(stationName);
         return time;
+    }
+
+    public static getTrainByDepartTimeAndHeading(departTime: string, stationName: StationName, heading: Heading): Train | null {
+        return this.trains.find(train => train.getExpectedArrivalTime(stationName) === departTime && train.getHeading() === heading) || null;
     }
 }

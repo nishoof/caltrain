@@ -1,8 +1,10 @@
+import { Heading, Schedule } from "./Schedule";
 import { getStationCoords, StationName, WEEKDAY_STATIONS } from "./Stations";
 
 export class PositionHandler {
     private static instance: PositionHandler | null = null;
     private positionListener: ((positionHandler: PositionHandler) => void) | null = null;
+    private trainListener: ((train: string) => void) | null = null;
 
     private lastKnownPosition: GeolocationPosition | null;
     private lastKnownStation: StationName | null = null;
@@ -38,6 +40,10 @@ export class PositionHandler {
         this.positionListener = listener;
     }
 
+    public setTrainListener(listener: ((train: string) => void) | null) {
+        this.trainListener = listener;
+    }
+
     private updateClosestStation() {
         if (!this.lastKnownPosition) {
             console.warn("No last known position available.");
@@ -63,7 +69,16 @@ export class PositionHandler {
         } else if (minDistance < 0.5 && this.lastKnownStation === closestStation) {
             // At one point, the user was at this station, but now they are further away
             // So they are likely on a train departing from this station (or just left it, but we'll assume they are on a train)
-            console.log(`You are likely on a train departing from ${closestStation}.`);
+            const heading = this.getHeading(getStationCoords(this.lastKnownStation).latitude, userCoords.latitude);
+            console.log(`You are likely on a train departing from ${closestStation} going ${heading}.`);
+            const train = "Train 999";
+            const train2 = Schedule.getTrainByDepartTimeAndHeading(this.lastKnownPosition.timestamp.toString(), closestStation, heading);
+            if (train && this.trainListener) {
+                this.trainListener(train.toString());
+            }
+            if (train2) {
+                console.log(`Train found: ${train2.getNumber()} heading ${train2.getHeading()}`);
+            }
         } else if (minDistance < 0.5 && this.lastKnownStation !== closestStation) {
             // The user is close to a station, but not at the one they were last known to be at
             // So they are likely on a train arriving at this station
@@ -121,5 +136,20 @@ export class PositionHandler {
      */
     private deg2rad(deg: number) {
         return deg * (Math.PI / 180);
+    }
+
+    /**
+     * Calculates the user's heading based on their last known positions.
+     * @param lat1 Latitude of the first (old) position
+     * @param lat2 Latitude of the second (new) position
+     * @returns The user's heading (NORTH or SOUTH)
+     */
+    private getHeading(lat1: number, lat2: number): Heading {
+        // Just need to know if they're going north or south
+        if (lat2 > lat1) {
+            return Heading.NORTH;
+        } else {
+            return Heading.SOUTH;
+        }
     }
 }
