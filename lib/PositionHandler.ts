@@ -69,16 +69,15 @@ export class PositionHandler {
             this.lastKnownStation = closestStation;
         } else if (minDistance < 0.5 && this.lastKnownStation === closestStation) {
             // At one point, the user was at this station, but now they are further away
-            // So they are likely on a train departing from this station (or just left it, but we'll assume they are on a train)
+            // So they are likely on a train departing from this station
+            serverLog(`You are on a train departing from ${closestStation}.`);
             const heading = this.getHeading(getStationCoords(this.lastKnownStation).latitude, userCoords.latitude);
-            serverLog(`You are likely on a train departing from ${closestStation} going ${heading}.`);
-            const train = "Train 999";
-            const train2 = Schedule.getTrainByDepartTimeAndHeading(this.lastKnownPosition.timestamp.toString(), closestStation, heading);
+            const timeUnix = this.lastKnownPosition.timestamp;
+            const timeHHMM = this.unixTimestampToHHMM(timeUnix);
+            const train = Schedule.getTrainByDepartTimeAndHeading(timeHHMM, closestStation, heading);
             if (train && this.trainListener) {
                 this.trainListener(train.toString());
-            }
-            if (train2) {
-                serverLog(`Train found: ${train2.getNumber()} heading ${train2.getHeading()}`);
+                serverLog(train.toString());
             }
         } else if (minDistance < 0.5 && this.lastKnownStation !== closestStation) {
             // The user is close to a station, but not at the one they were last known to be at
@@ -137,6 +136,21 @@ export class PositionHandler {
      */
     private deg2rad(deg: number) {
         return deg * (Math.PI / 180);
+    }
+
+    /**
+     * Converts a UNIX timestamp to a HH:MM string in Pacific Time.
+     * @param timestamp UNIX timestamp in milliseconds
+     */
+    private unixTimestampToHHMM(timestamp: number): string {
+        const date = new Date(timestamp);
+        const options: Intl.DateTimeFormatOptions = {
+            timeZone: "America/Los_Angeles",
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false
+        };
+        return date.toLocaleTimeString("en-US", options);
     }
 
     /**
