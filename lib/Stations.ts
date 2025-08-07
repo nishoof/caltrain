@@ -1,3 +1,5 @@
+import { TrainType } from "./Schedule";
+
 export enum StationName {
     SAN_FRANCISCO = "San Francisco",
     TWENTY_SECOND_STREET = "22nd Street",
@@ -66,7 +68,7 @@ const STATION_COORDS: Record<StationName, { latitude: number; longitude: number 
     [StationName.GILROY]: { latitude: 37.004167, longitude: -121.566667 }
 };
 
-export const WEEKDAY_STATIONS = Object.freeze([
+export const LOCAL_STATIONS = Object.freeze([
     StationName.SAN_FRANCISCO,
     StationName.TWENTY_SECOND_STREET,
     StationName.BAYSHORE,
@@ -91,6 +93,119 @@ export const WEEKDAY_STATIONS = Object.freeze([
     StationName.SAN_JOSE_DIRIDON,
 ]);
 
+export const LOCAL_CP_STATIONS = Object.freeze([
+    StationName.SAN_FRANCISCO,
+    StationName.TWENTY_SECOND_STREET,
+    StationName.BAYSHORE,
+    StationName.SOUTH_SAN_FRANCISCO,
+    StationName.SAN_BRUNO,
+    StationName.MILLBRAE,
+    StationName.BURLINGAME,
+    StationName.SAN_MATEO,
+    StationName.HAYWARD_PARK,
+    StationName.HILLSDALE,
+    StationName.BELMONT,
+    StationName.SAN_CARLOS,
+    StationName.REDWOOD_CITY,
+    StationName.MENLO_PARK,
+    StationName.PALO_ALTO,
+    StationName.CALIFORNIA_AVENUE,
+    StationName.SAN_ANTONIO,
+    StationName.MOUNTAIN_VIEW,
+    StationName.SUNNYVALE,
+    StationName.LAWRENCE,
+    StationName.SANTA_CLARA,
+    StationName.COLLEGE_PARK,
+    StationName.SAN_JOSE_DIRIDON,
+]);
+
+export const LIMITED_STATIONS = Object.freeze([
+    StationName.SAN_FRANCISCO,
+    StationName.TWENTY_SECOND_STREET,
+    StationName.SOUTH_SAN_FRANCISCO,
+    StationName.MILLBRAE,
+    StationName.SAN_MATEO,
+    StationName.HILLSDALE,
+    StationName.REDWOOD_CITY,
+    StationName.MENLO_PARK,
+    StationName.PALO_ALTO,
+    StationName.CALIFORNIA_AVENUE,
+    StationName.SAN_ANTONIO,
+    StationName.MOUNTAIN_VIEW,
+    StationName.SUNNYVALE,
+    StationName.LAWRENCE,
+    StationName.SANTA_CLARA,
+    StationName.SAN_JOSE_DIRIDON,
+]);
+
+export const EXPRESS_STATIONS = Object.freeze([
+    StationName.SAN_FRANCISCO,
+    StationName.TWENTY_SECOND_STREET,
+    StationName.SOUTH_SAN_FRANCISCO,
+    StationName.MILLBRAE,
+    StationName.SAN_MATEO,
+    StationName.HILLSDALE,
+    StationName.REDWOOD_CITY,
+    StationName.PALO_ALTO,
+    StationName.MOUNTAIN_VIEW,
+    StationName.SUNNYVALE,
+    StationName.SAN_JOSE_DIRIDON,
+]);
+
+export const WEEKEND_LOCAL_STATIONS = Object.freeze([
+    StationName.SAN_FRANCISCO,
+    StationName.TWENTY_SECOND_STREET,
+    StationName.BAYSHORE,
+    StationName.SOUTH_SAN_FRANCISCO,
+    StationName.SAN_BRUNO,
+    StationName.MILLBRAE,
+    StationName.BROADWAY,
+    StationName.BURLINGAME,
+    StationName.SAN_MATEO,
+    StationName.HAYWARD_PARK,
+    StationName.HILLSDALE,
+    StationName.BELMONT,
+    StationName.SAN_CARLOS,
+    StationName.REDWOOD_CITY,
+    StationName.MENLO_PARK,
+    StationName.PALO_ALTO,
+    StationName.CALIFORNIA_AVENUE,
+    StationName.SAN_ANTONIO,
+    StationName.MOUNTAIN_VIEW,
+    StationName.SUNNYVALE,
+    StationName.LAWRENCE,
+    StationName.SANTA_CLARA,
+    StationName.SAN_JOSE_DIRIDON,
+]);
+
+export const SOUTH_COUNTY_CONNECTOR_STATIONS = Object.freeze([
+    StationName.SAN_JOSE_DIRIDON,
+    StationName.TAMIEN,
+    StationName.CAPITOL,
+    StationName.BLOSSOM_HILL,
+    StationName.MORGAN_HILL,
+    StationName.SAN_MARTIN,
+    StationName.GILROY
+]);
+
 export function getStationCoords(stationName: StationName): { latitude: number; longitude: number } {
     return STATION_COORDS[stationName];
+}
+
+/** Get a list of stations that a specific train type stops at. */
+export function getStationsByTrainType(trainType: TrainType): readonly StationName[] {
+    switch (trainType) {
+        case TrainType.LOCAL:
+            return LOCAL_STATIONS;
+        case TrainType.LOCAL_CP:
+            return LOCAL_CP_STATIONS;
+        case TrainType.LIMITED:
+            return LIMITED_STATIONS;
+        case TrainType.EXPRESS:
+            return EXPRESS_STATIONS;
+        case TrainType.WEEKEND_LOCAL:
+            return WEEKEND_LOCAL_STATIONS;
+        case TrainType.SOUTH_COUNTY_CONNECTOR:
+            return SOUTH_COUNTY_CONNECTOR_STATIONS;
+    }
 }

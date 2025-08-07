@@ -1,5 +1,5 @@
 import { Heading, Schedule } from "./Schedule";
-import { getStationCoords, StationName, WEEKDAY_STATIONS } from "./Stations";
+import { getStationCoords, StationName, LOCAL_STATIONS } from "./Stations";
 import { serverLog } from "./ServerLogger";
 
 export class PositionHandler {
@@ -57,7 +57,7 @@ export class PositionHandler {
         const userCoords = this.lastKnownPosition.coords;
         let minDistance = Infinity;
         let closestStation: StationName = StationName.SAN_FRANCISCO;
-        for (const stationName of WEEKDAY_STATIONS) {
+        for (const stationName of LOCAL_STATIONS) {
             const stationCoords = getStationCoords(stationName);
             const distance = this.distance(userCoords.latitude, userCoords.longitude, stationCoords.latitude, stationCoords.longitude);
             if (distance < minDistance) {
@@ -67,7 +67,6 @@ export class PositionHandler {
         }
         serverLog(`Closest station is ${closestStation} at a distance of ${minDistance} miles`);
         this.closestStation = { name: closestStation, distance: minDistance };
-
     }
 
     private updateTrain() {

@@ -7,6 +7,16 @@ export enum Heading {
     SOUTH = "S"
 }
 
+/** The train type determines what stations a train stops at */
+export enum TrainType {
+    LOCAL = 1,
+    LOCAL_CP = 2,   // College Park edge case
+    LIMITED = 4,
+    EXPRESS = 5,
+    WEEKEND_LOCAL = 6,
+    SOUTH_COUNTY_CONNECTOR = 8
+}
+
 class Train {
     private static readonly NUM_STATIONS = 29;
     private static readonly STATION_NAME_TO_INDEX: { [K in StationName]: number } = {
@@ -72,6 +82,18 @@ class Train {
 
     public toString(): string {
         return `Train ${this.number}`;
+    }
+
+    private getTrainType(): TrainType {
+        // Handle college park edge case
+        if (this.number === 108 || this.number === 113 || this.number === 140 || this.number === 141)
+            return TrainType.LOCAL_CP;
+
+        const firstDigit = Math.floor(this.number / 100);
+        if (firstDigit === 1 || firstDigit === 4 || firstDigit === 5 || firstDigit === 6 || firstDigit === 8)
+            return firstDigit;
+
+        throw new Error(`Invalid train number: ${this.number}`);
     }
 }
 
