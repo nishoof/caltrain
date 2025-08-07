@@ -3,6 +3,9 @@ import { getStationCoords, StationName, WEEKDAY_STATIONS } from "./Stations";
 import { serverLog } from "./ServerLogger";
 
 export class PositionHandler {
+    private static readonly RADIUS_AT_STATION_MILES = 0.25;
+    private static readonly RADIUS_NEAR_STATION_MILES = 0.75;
+
     private static instance: PositionHandler | null = null;
     private positionListener: ((positionHandler: PositionHandler) => void) | null = null;
     private trainListener: ((train: string) => void) | null = null;
@@ -45,6 +48,7 @@ export class PositionHandler {
         this.trainListener = listener;
     }
 
+
     private updateClosestStation() {
         if (!this.lastKnownPosition) {
             console.warn("No last known position available.");
@@ -64,14 +68,23 @@ export class PositionHandler {
         serverLog(`Closest station is ${closestStation} at a distance of ${minDistance} miles`);
         this.closestStation = { name: closestStation, distance: minDistance };
 
-        if (minDistance < 0.1) {
+    }
+
+    private updateTrain() {
+        if (!this.lastKnownPosition || !this.closestStation)
+            return;
+        const closestStation = this.closestStation.name;
+        const distance = this.closestStation.distance;
+        if (distance < PositionHandler.RADIUS_AT_STATION_MILES) {
             serverLog(`You are at the ${closestStation} station.`);
             this.lastKnownStation = closestStation;
-        } else if (minDistance < 0.5 && this.lastKnownStation === closestStation) {
+        } else if (distance < PositionHandler.RADIUS_NEAR_STATION_MILES && this.lastKnownStation === closestStation) {
             // At one point, the user was at this station, but now they are further away
             // So they are likely on a train departing from this station
             serverLog(`You are on a train departing from ${closestStation}.`);
-            const heading = this.getHeading(getStationCoords(this.lastKnownStation).latitude, userCoords.latitude);
+            const oldLat = getStationCoords(this.lastKnownStation).latitude;
+            const newLat = this.lastKnownPosition.coords.latitude;
+            const heading = this.getHeading(oldLat, newLat);
             const timeUnix = this.lastKnownPosition.timestamp;
             const timeHHMM = this.unixTimestampToHHMM(timeUnix);
             const train = Schedule.getTrainByDepartTimeAndHeading(timeHHMM, closestStation, heading);
@@ -79,7 +92,7 @@ export class PositionHandler {
                 this.trainListener(train.toString());
                 serverLog(train.toString());
             }
-        } else if (minDistance < 0.5 && this.lastKnownStation !== closestStation) {
+        } else if (distance < PositionHandler.RADIUS_NEAR_STATION_MILES && this.lastKnownStation !== closestStation) {
             // The user is close to a station, but not at the one they were last known to be at
             // So they are likely on a train arriving at this station
             serverLog(`You are likely on a train arriving at ${closestStation}.`);
@@ -90,6 +103,7 @@ export class PositionHandler {
         serverLog(`Position updated: ${position.coords.latitude}, ${position.coords.longitude} at ${new Date(position.timestamp).toLocaleTimeString()} (${position.timestamp})`);
         this.lastKnownPosition = position;
         this.updateClosestStation();
+        this.updateTrain();
         if (this.positionListener) {
             this.positionListener(this);
         }
