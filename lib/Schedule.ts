@@ -1,4 +1,4 @@
-import { StationName } from "./Stations";
+import { getStationsByTrainType, StationName } from "./Stations";
 
 const NO_TIME = null;
 
@@ -17,7 +17,7 @@ export enum TrainType {
     SOUTH_COUNTY_CONNECTOR = 8
 }
 
-class Train {
+export class Train {
     private static readonly NUM_STATIONS = 29;
     private static readonly STATION_NAME_TO_INDEX: { [K in StationName]: number } = {
         "San Francisco": 0,
@@ -73,6 +73,15 @@ class Train {
         } else {
             return Heading.NORTH;
         }
+    }
+
+    public getNextStation(currentStation: StationName): StationName | null {
+        const trainType = this.getTrainType();
+        const stations = getStationsByTrainType(trainType);
+        const currentIndex = stations.indexOf(currentStation);
+        if (currentIndex === -1) return null;
+        if (currentIndex === stations.length - 1) return null;
+        return stations[currentIndex + 1];
     }
 
     public getExpectedArrivalTime(stationName: StationName): string | typeof NO_TIME {
@@ -224,7 +233,6 @@ export class Schedule {
         const train = this.trains.find(t => t.getNumber() === trainNumber);
         if (!train)
             throw new Error(`Train number ${trainNumber} not found`);
-
         const time = train.getExpectedArrivalTime(stationName);
         return time;
     }

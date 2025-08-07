@@ -1,6 +1,6 @@
-import { Heading, Schedule } from "./Schedule";
-import { getStationCoords, StationName, LOCAL_STATIONS } from "./Stations";
+import { Heading, Schedule, Train } from "./Schedule";
 import { serverLog } from "./ServerLogger";
+import { getStationCoords, LOCAL_STATIONS, StationName } from "./Stations";
 
 export class PositionHandler {
     private static readonly RADIUS_AT_STATION_MILES = 0.25;
@@ -9,10 +9,12 @@ export class PositionHandler {
     private static instance: PositionHandler | null = null;
     private positionListener: ((positionHandler: PositionHandler) => void) | null = null;
     private trainListener: ((train: string) => void) | null = null;
+    private nextStationListener: ((nextStation: StationName | null) => void) | null = null;
 
     private lastKnownPosition: GeolocationPosition | null;
     private lastKnownStation: StationName | null = null;
     private closestStation: { name: StationName; distance: number } | null = null;
+    private train: Train | null = null;
 
     constructor() {
         serverLog("PositionHandler initialized");
@@ -48,6 +50,9 @@ export class PositionHandler {
         this.trainListener = listener;
     }
 
+    public setNextStationListener(listener: ((nextStation: StationName | null) => void) | null) {
+        this.nextStationListener = listener;
+    }
 
     private updateClosestStation() {
         if (!this.lastKnownPosition) {
@@ -87,6 +92,9 @@ export class PositionHandler {
             const timeUnix = this.lastKnownPosition.timestamp;
             const timeHHMM = this.unixTimestampToHHMM(timeUnix);
             const train = Schedule.getTrainByDepartTimeAndHeading(timeHHMM, closestStation, heading);
+            if (train) {
+                this.train = train;
+            }
             if (train && this.trainListener) {
                 this.trainListener(train.toString());
                 serverLog(train.toString());
@@ -98,11 +106,23 @@ export class PositionHandler {
         }
     }
 
+    private updateNextStation() {
+        if (!this.nextStationListener)
+            return;
+        if (!this.lastKnownStation || !this.train) {
+            this.nextStationListener(null);
+            return;
+        }
+        const nextStation = this.train.getNextStation(this.lastKnownStation);
+        this.nextStationListener(nextStation);
+    }
+
     private updateSuccess(position: GeolocationPosition) {
         serverLog(`Position updated: ${position.coords.latitude}, ${position.coords.longitude} at ${new Date(position.timestamp).toLocaleTimeString()} (${position.timestamp})`);
         this.lastKnownPosition = position;
         this.updateClosestStation();
         this.updateTrain();
+        this.updateNextStation();
         if (this.positionListener) {
             this.positionListener(this);
         }
