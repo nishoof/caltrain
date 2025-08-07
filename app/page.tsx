@@ -5,6 +5,7 @@ import { StationName } from "@/lib/Stations";
 import { useEffect, useState } from "react";
 
 export default function CaltrainEta() {
+  const [train, setTrain] = useState<string>("Train Unknown");
   const [closestStation, setClosestStation] = useState<{ name: StationName; distance: number } | null>(null);
 
   function onPositionUpdate(positionHandler: PositionHandler) {
@@ -20,6 +21,7 @@ export default function CaltrainEta() {
   useEffect(() => {
     const positionHandler = PositionHandler.getInstance();
     positionHandler.setPositionListener(onPositionUpdate);
+    positionHandler.setTrainListener(setTrain);
   }, []);
 
   return (
@@ -29,7 +31,7 @@ export default function CaltrainEta() {
 
         {closestStation ?
           <>
-            <p>Train 109</p>
+            <p>{train}</p>
             <p>Closest Station: {closestStation.name} ({closestStation.distance.toFixed(2)} miles away)</p>
             <p>Next: California Avenue</p>
             <p>ETA: 7:19am (3 mins)</p>

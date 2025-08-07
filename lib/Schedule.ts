@@ -2,6 +2,11 @@ import { StationName } from "./Stations";
 
 const NO_TIME = null;
 
+export enum Heading {
+    NORTH = "N",
+    SOUTH = "S"
+}
+
 class Train {
     private static readonly NUM_STATIONS = 29;
     private static readonly STATION_NAME_TO_INDEX: { [K in StationName]: number } = {
@@ -52,9 +57,21 @@ class Train {
         return this.number;
     }
 
+    public getHeading(): Heading {
+        if (this.number % 2 === 0) {
+            return Heading.SOUTH;
+        } else {
+            return Heading.NORTH;
+        }
+    }
+
     public getExpectedArrivalTime(stationName: StationName): string | typeof NO_TIME {
         const index = Train.STATION_NAME_TO_INDEX[stationName];
         return this.expectedTimes[index];
+    }
+
+    public toString(): string {
+        return `Train ${this.number}`;
     }
 }
 
@@ -178,8 +195,8 @@ export class Schedule {
     ];
 
     /**
-     * Retrieves the expected arrival time of a specific train at a given station.
-     * @throws Error if the train with the specified number is not found.
+     * Retrieves the expected arrival time of a given train at a given station.
+     * @throws Error if the train with the given number is not found.
      */
     public static getExpectedArrivalTime(trainNumber: number, stationName: StationName): string | typeof NO_TIME {
         const train = this.trains.find(t => t.getNumber() === trainNumber);
@@ -188,5 +205,58 @@ export class Schedule {
 
         const time = train.getExpectedArrivalTime(stationName);
         return time;
+    }
+
+    /**
+     * Retrieves the closest train given its departure time (from a given station) and heading.
+     * The train must be heading in the specified direction.
+     * The train with the closest time to the given departure time will be returned. Might not be exactly the given time.
+     * @param departTime
+     * @param stationName
+     * @param heading
+     * @returns The matching train or null if not found.
+     */
+    public static getTrainByDepartTimeAndHeading(departTime: string, stationName: StationName, heading: Heading): Train | null {
+        // Filter out trains that are not heading in the given direction
+        const potentialTrains = this.trains.filter(train => train.getHeading() === heading);
+
+        // If no trains match the criteria, return null
+        if (potentialTrains.length === 0) {
+            return null;
+        }
+
+        // Pick the train that arrives at the closest time to the given departTime
+        let minTimeDifference = Infinity;
+        let closestTrain: Train | null = null;
+        potentialTrains.forEach(train => {
+            const arrivalTime = train.getExpectedArrivalTime(stationName);
+            if (arrivalTime === NO_TIME)
+                return; // Skip if the train does not arrive at this station
+            const timeDifference = Math.abs(this.getTimeDifference(arrivalTime, departTime));
+            if (timeDifference < minTimeDifference) {
+                minTimeDifference = timeDifference;
+                closestTrain = train;
+            }
+        });
+
+        return closestTrain;
+    }
+
+    /**
+     * Calculates the difference between two times in minutes.
+     * @param time1 The first time in 'HH:MM' format.
+     * @param time2 The second time in 'HH:MM' format.
+     * @returns The difference between the two times in minutes. Positive if time1 is later than time2, negative if earlier.
+     */
+    private static getTimeDifference(time1: string, time2: string): number {
+        if (time1.length !== 5 || time2.length !== 5)
+            throw new Error("Invalid time format. Expected 'HH:MM'.");
+        if (time1.charAt(2) !== ':' || time2.charAt(2) !== ':')
+            throw new Error("Invalid time format. Expected 'HH:MM'.");
+        const [hours1, minutes1] = time1.split(':').map(Number);
+        const [hours2, minutes2] = time2.split(':').map(Number);
+        const totalMinutes1 = hours1 * 60 + minutes1;
+        const totalMinutes2 = hours2 * 60 + minutes2;
+        return totalMinutes1 - totalMinutes2;
     }
 }
