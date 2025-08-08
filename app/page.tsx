@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 export default function CaltrainEta() {
   const [train, setTrain] = useState<string | null>(null);
   const [closestStation, setClosestStation] = useState<{ name: StationName; distance: number } | null>(null);
-  const [nextStation, setNextStation] = useState<StationName | null>(null);
+  const [nextStation, setNextStation] = useState<{ name: StationName, eta: string } | null>(null);
 
   function onPositionUpdate(positionHandler: PositionHandler) {
     const closestStation = positionHandler.getClosestStation();
@@ -35,8 +35,8 @@ export default function CaltrainEta() {
           <>
             <p>{train || "Train Unknown"}</p>
             <p>Closest Station: {closestStation.name} ({closestStation.distance.toFixed(2)} miles away)</p>
-            <p>Next: {nextStation || "Unknown"}</p>
-            <p>ETA: 7:19am (3 mins)</p>
+            <p>Next Station: {nextStation?.name || "Unknown"}</p>
+            <p>ETA: {nextStation?.eta || "Unknown"}</p>
           </>
           :
           <p>Please allow location access</p>

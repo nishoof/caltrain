@@ -9,7 +9,7 @@ export class PositionHandler {
     private static instance: PositionHandler | null = null;
     private positionListener: ((positionHandler: PositionHandler) => void) | null = null;
     private trainListener: ((train: string) => void) | null = null;
-    private nextStationListener: ((nextStation: StationName | null) => void) | null = null;
+    private nextStationListener: ((nextStation: { name: StationName, eta: string } | null) => void) | null = null;
 
     private lastKnownPosition: GeolocationPosition | null;
     private lastKnownStation: StationName | null = null;
@@ -50,7 +50,7 @@ export class PositionHandler {
         this.trainListener = listener;
     }
 
-    public setNextStationListener(listener: ((nextStation: StationName | null) => void) | null) {
+    public setNextStationListener(listener: ((nextStation: { name: StationName, eta: string } | null) => void) | null) {
         this.nextStationListener = listener;
     }
 
@@ -113,8 +113,17 @@ export class PositionHandler {
             this.nextStationListener(null);
             return;
         }
-        const nextStation = this.train.getNextStation(this.lastKnownStation);
-        this.nextStationListener(nextStation);
+        const nextStationName = this.train.getNextStation(this.lastKnownStation);
+        if (!nextStationName) {
+            this.nextStationListener(null);
+            return;
+        }
+        const nextStationEta = this.train.getExpectedArrivalTime(nextStationName);
+        if (!nextStationEta) {
+            throw new Error(`No ETA found for ${this.train.toString()} ${nextStationName}`);
+        }
+        const nextStationEtaDisplayable = this.hhmmToDisplayTime(nextStationEta);
+        this.nextStationListener({ name: nextStationName, eta: nextStationEtaDisplayable });
     }
 
     private updateSuccess(position: GeolocationPosition) {
@@ -184,6 +193,19 @@ export class PositionHandler {
             hour12: false
         };
         return date.toLocaleTimeString("en-US", options);
+    }
+
+    /**
+     * Converts a time string from HH:MM format to a display-friendly format.
+     * For example, "14:30" becomes "2:30pm" and "00:02" becomes "12:02am".
+     * @param time Time in HH:MM format
+     * @returns Display-friendly time string
+     */
+    private hhmmToDisplayTime(time: string): string {
+        const [hours, minutes] = time.split(":").map(Number);
+        const period = hours < 12 ? "am" : "pm";
+        const displayHours = hours % 12 || 12;
+        return `${displayHours}:${minutes}${period}`;
     }
 
     /**
